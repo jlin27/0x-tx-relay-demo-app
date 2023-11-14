@@ -3,8 +3,19 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import { formatUnits, parseUnits } from "ethers";
-import { useAccount, useBalance, type Address } from "wagmi";
+import {
+  erc20ABI,
+  useAccount,
+  useBalance,
+  useContractRead,
+  type Address,
+} from "wagmi";
+import { MAX_ALLOWANCE, exchangeProxy } from "../src/constants";
+import MATIC_PERMIT_TOKENS from "../src/supports-permit/137.json";
+import type { TokenSupportsPermit } from "../src/utils/eip712_utils.types";
 import qs from "qs";
+
+const maticPermitTokensDataTyped = MATIC_PERMIT_TOKENS as TokenSupportsPermit;
 
 export default function Page() {
   // const priceData = await getTxRelayPrice();
@@ -32,7 +43,7 @@ export default function Page() {
   // Fetch price data and set the buyAmount whenever the sellAmount changes
   useEffect(() => {
     const params = {
-      sellToken: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // USDC
+      sellToken: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", // USDC
       buyToken: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270", // WMATIC
       sellAmount: parsedSellAmount,
       buyAmount: parsedBuyAmount,
@@ -43,7 +54,7 @@ export default function Page() {
       const response = await fetch(`/api/price?${qs.stringify(params)}`);
       const data = await response.json();
       console.log(data, typeof data);
-      console.log(data.buyAmount, typeof data.buyAmount);
+      console.log("buyAmount, type:", data.buyAmount, typeof data.buyAmount);
       console.log(formatUnits(data.buyAmount, 18), data);
       setBuyAmount(formatUnits(data.buyAmount, 18));
     }
@@ -104,9 +115,10 @@ export default function Page() {
         {/* Add custom button */}
         <div>{takerAddress}</div>
 
+        {/* TODO: Step 1: Is wallet connected (have takerAddress)? If true, go to ApproveOrReview() to check if spender (EP) has allowance. If false, display default button.  */}
         {takerAddress ? (
           <ApproveOrReviewButton
-            sellTokenAddress="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+            sellTokenAddress="0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
             takerAddress={takerAddress}
             onClick={() => {
               setFinalize(true);
@@ -140,7 +152,11 @@ export default function Page() {
                   {(() => {
                     if (!connected) {
                       return (
-                        <button onClick={openConnectModal} type="button">
+                        <button
+                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
+                          onClick={openConnectModal}
+                          type="button"
+                        >
                           Connect Wallet
                         </button>
                       );
@@ -214,7 +230,44 @@ function ApproveOrReviewButton({
   sellTokenAddress: Address;
   disabled?: boolean;
 }) {
-  // TODO: Look up if the sellToken supports permit. If not (WMATIC), set allowance and pay for approvals with gas. If it does (USDC), just get the Tx Relay price
+  // TODO: Step 2: Check if spender (EP) has allowance?
+  // Read from erc20, does spender (0x Exchange Proxy) have allowance?
+  const { data: allowance, refetch } = useContractRead({
+    address: sellTokenAddress,
+    abi: erc20ABI,
+    functionName: "allowance",
+    args: [takerAddress, exchangeProxy],
+  });
+
+  // TODO: Step 3: If has allowance & approval not required -> GET Tx Relay Price
+  // Custom buotton says "Review"
+
+  // TODO: Step 4: If no allowance & approval required -> Check if token supports permit.
+  // Look up if the sellToken supports permit. If it does (USDC), just get the Tx Relay price
+  // Check if sellTokenAddress supports permit
+  if (maticPermitTokensDataTyped[sellTokenAddress]) {
+    // Logic when sellTokenAddress matches a key in the JSON file
+    console.log(
+      "sellTokenAddress found:",
+      maticPermitTokensDataTyped[sellTokenAddress]
+    );
+    return (
+      <button
+        type="button"
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
+      >
+        Sign Approval
+      </button>
+    );
+
+    // Implement your specific logic here
+  } else {
+    // Logic when sellTokenAddress does not support permit (e.g. WMATIC). Set allowance
+    // and pay for approvals with gas.
+    console.log("sellTokenAddress not found");
+    // Implement your specific logic here
+  }
+
   return <></>;
 }
 // As the page expands, consider pulling these out as separate React components that's exported and imported.
