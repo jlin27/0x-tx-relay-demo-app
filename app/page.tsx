@@ -17,6 +17,9 @@ import qs from "qs";
 
 const maticPermitTokensDataTyped = MATIC_PERMIT_TOKENS as TokenSupportsPermit;
 
+const sellToken = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
+const buyToken = "";
+
 export default function Page() {
   // const priceData = await getTxRelayPrice();
   // console.log(priceData);
@@ -69,10 +72,26 @@ export default function Page() {
     token: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // USDC
   });
 
-  const disabled =
+  const hasSufficientBalance =
     data && sellAmount ? parseUnits(sellAmount, 6) > data.value : true;
 
-  console.log(sellAmount);
+  const isSellTokenPermit = Boolean(maticPermitTokensDataTyped[sellToken]);
+
+  const { data: allowance, refetch } = useContractRead({
+    address: sellToken,
+    abi: erc20ABI,
+    functionName: "allowance",
+    args: takerAddress ? [takerAddress, exchangeProxy] : undefined,
+  });
+
+  console.log(allowance, "<-allowance");
+  // Check if there is sufficient allowance
+  const hasSufficientAllowance =
+    takerAddress && allowance ? allowance == 0n : false;
+
+  console.log(hasSufficientAllowance, "<-hasSufficientAllowance");
+
+  // const checkApproval = isSellTokenPermit && !hasSufficientAllowance;
 
   return (
     <div>
@@ -118,12 +137,12 @@ export default function Page() {
         {/* TODO: Step 1: Is wallet connected (have takerAddress)? If true, go to ApproveOrReview() to check if spender (EP) has allowance. If false, display default button.  */}
         {takerAddress ? (
           <ApproveOrReviewButton
-            sellTokenAddress="0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
+            sellTokenAddress={sellToken}
             takerAddress={takerAddress}
             onClick={() => {
               setFinalize(true);
             }}
-            disabled={disabled}
+            disabled={hasSufficientBalance}
           />
         ) : (
           <ConnectButton.Custom>
@@ -239,42 +258,11 @@ function ApproveOrReviewButton({
     args: [takerAddress, exchangeProxy],
   });
 
-  // TODO: Step 3: If has allowance & approval not required -> GET Tx Relay Price
-  // Custom buotton says "Review"
-
-  // TODO: Step 4: If no allowance & approval required -> Check if token supports permit.
-  // Look up if the sellToken supports permit. If it does (USDC), just get the Tx Relay price
-  // Check if sellTokenAddress supports permit
-  if (maticPermitTokensDataTyped[sellTokenAddress]) {
-    // Logic when sellTokenAddress matches a key in the JSON file
-    console.log(
-      "sellTokenAddress found:",
-      maticPermitTokensDataTyped[sellTokenAddress]
-    );
-    return (
-      <button
-        type="button"
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
-      >
-        Sign Approval
-      </button>
-    );
-
-    // Implement your specific logic here
-  } else {
-    // Logic when sellTokenAddress does not support permit (e.g. WMATIC). Set allowance
-    // and pay for approvals with gas.
-    console.log("sellTokenAddress not found");
-    // Implement your specific logic here
-  }
-
-  return <></>;
+  return <button disabled={disabled}>{"Review Trade"}</button>;
 }
 // As the page expands, consider pulling these out as separate React components that's exported and imported.
 // function Price() {
 //   //
 // }
 
-// function Quote() {
-//   //
-// }
+function Quote() {}
