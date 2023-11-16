@@ -1,4 +1,3 @@
-// Define an interface that matches the structure of your JSON data
 export interface TokenSupportsPermit {
   [key: string]: {
     kind: string;
