@@ -39,7 +39,6 @@ export default function PriceView({
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("");
   const [tradeDirection, setTradeDirection] = useState("sell");
-  const [quote, setQuote] = useState("");
 
   const parsedSellAmount =
     sellAmount && tradeDirection === "sell"
@@ -143,7 +142,6 @@ export default function PriceView({
         {/* Add custom button */}
         <div>{takerAddress}</div>
 
-        {}
         {takerAddress ? (
           <ApproveOrReviewButton
             sellTokenAddress={sellToken}

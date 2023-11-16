@@ -22,7 +22,7 @@ export default function QuoteView({
 }: {
   checkApproval: boolean;
   price: TxRelayPriceResponse;
-  quote: TxRelayQuoteResponse;
+  quote: TxRelayQuoteResponse | undefined;
   setQuote: (price: any) => void;
   takerAddress: Address | undefined;
 }) {
@@ -39,13 +39,26 @@ export default function QuoteView({
     async function main() {
       const response = await fetch(`/api/quote?${qs.stringify(params)}`);
       const data = await response.json();
+      setQuote(data);
+      console.log(data, "<-quote");
     }
-  }, []);
+  }, [
+    price.sellTokenAddress,
+    price.buyTokenAddress,
+    price.sellAmount,
+    takerAddress,
+    checkApproval,
+    setQuote,
+  ]);
 
+  if (!quote) {
+    return <div>Getting best quote...</div>;
+  }
   return (
     <div>
       <form>
         <h1>We are in quote</h1>
+        <div>{quote.sellAmount}</div>
       </form>
     </div>
   );

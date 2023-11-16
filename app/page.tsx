@@ -18,10 +18,11 @@ import type { TokenSupportsPermit } from "../src/utils/eip712_utils.types";
 import { TxRelayPriceResponse, TxRelayQuoteResponse } from "../src/utils/types";
 
 export default function Page() {
-  const [price, setPrice] = useState<TxRelayPriceResponse | undefined>();
+  const { address } = useAccount();
   const [finalize, setFinalize] = useState(false);
   const [checkAppoval, setCheckApproval] = useState(false);
-  const { address } = useAccount();
+  const [price, setPrice] = useState<TxRelayPriceResponse | undefined>();
+  const [quote, setQuote] = useState();
 
   console.log(
     price,
@@ -34,7 +35,13 @@ export default function Page() {
   return (
     <div>
       {price && finalize ? (
-        <h1>QUOTE VIEW</h1>
+        <QuoteView
+          checkApproval={checkAppoval}
+          price={price}
+          quote={quote}
+          setQuote={setQuote}
+          takerAddress={address}
+        />
       ) : (
         <PriceView
           takerAddress={address}
