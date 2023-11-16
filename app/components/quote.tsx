@@ -42,13 +42,14 @@ export default function QuoteView({
       setQuote(data);
       console.log(data, "<-quote");
     }
+    main();
   }, [
     price.sellTokenAddress,
     price.buyTokenAddress,
     price.sellAmount,
     takerAddress,
     checkApproval,
-    setQuote,
+    setQuote, // is setQuote stable enough to add here?
   ]);
 
   if (!quote) {
