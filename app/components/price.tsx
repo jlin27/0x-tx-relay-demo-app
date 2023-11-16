@@ -19,17 +19,18 @@ import {
 import qs from "qs";
 
 export default function PriceView({
+  takerAddress,
   price,
   setPrice,
+  setFinalize,
   setCheckApproval,
 }: {
+  takerAddress: Address | undefined;
   price: any;
   setPrice: (price: any) => void;
+  setFinalize: (finalize: boolean) => void;
   setCheckApproval: (data: boolean) => void;
 }) {
-  const { address } = useAccount();
-  const takerAddress = address;
-
   const maticPermitTokensDataTyped = MATIC_PERMIT_TOKENS as TokenSupportsPermit;
 
   const sellToken = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
@@ -38,7 +39,6 @@ export default function PriceView({
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("");
   const [tradeDirection, setTradeDirection] = useState("sell");
-  const [finalize, setFinalize] = useState(false);
   const [quote, setQuote] = useState("");
 
   const parsedSellAmount =

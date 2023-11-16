@@ -3,7 +3,7 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import PriceView from "./components/price";
 import QuoteView from "./components/quote";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
   useAccount,
@@ -21,7 +21,15 @@ export default function Page() {
   const [price, setPrice] = useState<TxRelayPriceResponse | undefined>();
   const [finalize, setFinalize] = useState(false);
   const [checkAppoval, setCheckApproval] = useState(false);
-  console.log(price, finalize, checkAppoval, "<- price, finalize");
+  const { address } = useAccount();
+
+  console.log(
+    price,
+    finalize,
+    checkAppoval,
+    address,
+    "<- price, finalize, checkApproval, address"
+  );
 
   return (
     <div>
@@ -29,8 +37,10 @@ export default function Page() {
         <h1>QUOTE VIEW</h1>
       ) : (
         <PriceView
+          takerAddress={address}
           price={price}
           setPrice={setPrice}
+          setFinalize={setFinalize}
           setCheckApproval={setCheckApproval}
         />
       )}
