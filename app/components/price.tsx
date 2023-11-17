@@ -66,7 +66,6 @@ export default function PriceView({
 
       setBuyAmount(formatUnits(data.buyAmount, 18));
       setPrice(data);
-      console.log(price, "<-price");
     }
 
     if (sellAmount !== "") {
