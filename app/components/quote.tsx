@@ -7,6 +7,11 @@ import {
 } from "../../src/utils/types";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { Hex, hexToNumber } from "viem";
+import {
+  EIP712TypedData,
+  SignatureType,
+  splitSignature,
+} from "../../src/utils/signature";
 
 export default function QuoteView({
   checkApproval,
@@ -63,7 +68,7 @@ export default function QuoteView({
   const { eip712: approvalEip712 } = approval || {}; // if approval object exists, rename the eip712 object to approvalEip712; otherwise, empty
   const { type: approvalType } = approval || {}; // if approval object exists, rename the type key to approvalType; otherwise, empty
   const { eip712: tradeEip712 } = trade; // for trade object, rename the eip712 object to tradeEip712
-  const { eip712: tradeType } = trade; // for trade object, rename the type key to tradeType
+  const { type: tradeType } = trade; // for trade object, rename the type key to tradeType
 
   return (
     <div className="p-3 mx-auto max-w-screen-sm ">
@@ -115,52 +120,57 @@ export default function QuoteView({
     return (
       <button
         onClick={async () => {
-          /* if approval exists, split signature for approval */
-          if (gaslessApprovalSignature) {
-            const { r, s } = secp256k1.Signature.fromCompact(
-              gaslessApprovalSignature.slice(2, 130)
-            );
-            const v = hexToNumber(`0x${gaslessApprovalSignature.slice(130)}`);
-            console.log(v, r, s, "<-approval v,r, s");
+          let approvalSplitSig;
+          let tradeSplitSig;
+          let approvalDataToSubmit;
+          let tradeDataToSubmit;
 
-            /* setup approval object */
-            let approval = {
+          // if approval exists, split signature for approval
+          if (gaslessApprovalSignature) {
+            const approvalSplitSig = splitSignature(gaslessApprovalSignature);
+            console.log(approvalSplitSig, "<-approvalSplitSig");
+
+            approvalDataToSubmit = {
               type: approvalType,
               eip712: approvalEip712,
               signature: {
-                v: v,
-                r: r,
-                s: s,
+                ...approvalSplitSig,
+                v: Number(approvalSplitSig.v),
+                signatureType: SignatureType.EIP712,
               },
             };
-            console.log(approval, "<-approval object");
           }
-          /* split signature for trade */
+          // split signature for trade
           if (tradeSignature) {
-            const { r, s } = secp256k1.Signature.fromCompact(
-              tradeSignature.slice(2, 130)
-            );
-            const v = hexToNumber(`0x${tradeSignature.slice(130)}`);
-            // console.log(v, r, s, "<-trade v,r, s");
-            /* setup approval object */
-            let trade = {
+            const tradeSplitSig = splitSignature(tradeSignature);
+            console.log(tradeSplitSig, "<-tradeSplitSig");
+
+            tradeDataToSubmit = {
               type: tradeType,
               eip712: tradeEip712,
               signature: {
-                v: v,
-                r: r,
-                s: s,
+                ...tradeSplitSig,
+                v: Number(tradeSplitSig.v),
+                signatureType: SignatureType.EIP712,
               },
             };
-            console.log(trade, "<-trade object");
           }
+          console.log(
+            approvalDataToSubmit,
+            tradeDataToSubmit,
+            "<-Can we access both data objects?"
+          );
+
           try {
             const response = await fetch("/api/submit", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ approval, trade }), // Send approval and trade data
+              body: JSON.stringify({
+                trade: tradeDataToSubmit,
+                approval: approvalDataToSubmit,
+              }), // Send approval and trade data
             });
             const data = await response.json();
             console.log(data, "<- POST data"); // Log the response from your API
