@@ -43,7 +43,11 @@ export default function StatusView({ tradeHash }: { tradeHash: string }) {
       <h1>Checking Trade Status</h1>
 
       <div>
-        {statusData?.status === "confirmed" ? <p>Success!</p> : <p>Pending!</p>}
+        {statusData?.status === "confirmed" ? (
+          <p>Trade Confirmed!</p>
+        ) : (
+          <p>Pending!</p>
+        )}
       </div>
     </div>
   );

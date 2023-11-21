@@ -25,11 +25,15 @@ export default function Page() {
   );
 
   if (tradeHash) {
-    return <StatusView tradeHash={tradeHash} />;
+    return (
+      <div className="p-8">
+        <StatusView tradeHash={tradeHash} />
+      </div>
+    );
   }
-  console.log(quote, "<-quote");
+
   return (
-    <div>
+    <div className="p-8">
       {price && finalize ? (
         <QuoteView
           checkApproval={checkAppoval}
@@ -42,7 +46,6 @@ export default function Page() {
       ) : (
         <PriceView
           takerAddress={address}
-          price={price}
           setPrice={setPrice}
           setFinalize={setFinalize}
           setCheckApproval={setCheckApproval}

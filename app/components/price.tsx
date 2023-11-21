@@ -2,7 +2,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { erc20ABI, useBalance, useContractRead, type Address } from "wagmi";
-import { MAX_ALLOWANCE, exchangeProxy } from "../../src/constants";
+import { exchangeProxy } from "../../src/constants";
 import MATIC_PERMIT_TOKENS from "../../src/supports-permit/137.json";
 import type { TokenSupportsPermit } from "../../src/utils/eip712_utils.types";
 
@@ -10,13 +10,11 @@ import qs from "qs";
 
 export default function PriceView({
   takerAddress,
-  price,
   setPrice,
   setFinalize,
   setCheckApproval,
 }: {
   takerAddress: Address | undefined;
-  price: any;
   setPrice: (price: any) => void;
   setFinalize: (finalize: boolean) => void;
   setCheckApproval: (data: boolean) => void;
@@ -24,11 +22,10 @@ export default function PriceView({
   const maticPermitTokensDataTyped = MATIC_PERMIT_TOKENS as TokenSupportsPermit;
 
   const sellToken = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
-  const buyToken = "";
 
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("");
-  const [tradeDirection, setTradeDirection] = useState("sell");
+  const [tradeDirection] = useState("sell");
 
   const parsedSellAmount =
     sellAmount && tradeDirection === "sell"
@@ -61,7 +58,7 @@ export default function PriceView({
     if (sellAmount !== "") {
       main();
     }
-  }, [sellAmount, parsedBuyAmount, parsedSellAmount, takerAddress]);
+  }, [sellAmount, parsedBuyAmount, parsedSellAmount, takerAddress, setPrice]);
 
   // Hook for fetching balance information for specified token for a specific takerAddress
   const { data, isError, isLoading } = useBalance({
@@ -103,34 +100,38 @@ export default function PriceView({
         ICON
         <ConnectButton />
       </header>
-      <h1>sell USDC to buy WMATIC on Polygon</h1>
+      <h1 className="text-2xl font-extrabold">
+        Sell USDC to buy WMATIC on Polygon
+      </h1>
 
-      <form>
-        <label htmlFor="sell">sell</label>
-        <input
-          id="sell-amount"
-          type="number"
-          value={sellAmount}
-          onChange={(e) => {
-            setSellAmount(e.target.value);
-          }}
-        />
-        <label htmlFor="sell">USDC</label>
-        <br />
-        <label htmlFor="buy">buy</label>
-        <input
-          id="buy-amount"
-          type="number"
-          className="cursor-not-allowed"
-          readOnly
-          value={buyAmount}
-        />
-        <label htmlFor="sell">WMATIC</label>
-        <br />
+      <form className="my-4">
+        <div className="my-4">
+          <label htmlFor="sell" className="mr-1">
+            Sell USDC
+          </label>
+          <input
+            id="sell-amount"
+            type="number"
+            value={sellAmount}
+            onChange={(e) => {
+              setSellAmount(e.target.value);
+            }}
+            className="border border-slate-500 rounded-md"
+          />
+        </div>
 
-        {/* Add custom button */}
-        <div>{takerAddress}</div>
-
+        <div className="my-4">
+          <label htmlFor="buy-amount" className="mr-1">
+            Buy WMATIC
+          </label>
+          <input
+            type="number"
+            id="buy-amount"
+            className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed"
+            value={buyAmount}
+            readOnly
+          />
+        </div>
         {takerAddress ? (
           <ApproveOrReviewButton
             sellTokenAddress={sellToken}
@@ -259,8 +260,9 @@ export default function PriceView({
           // fetch data, when finished, show quote view
           setFinalize(true);
         }}
+        className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
       >
-        {"Review Trade"}
+        Review Trade
       </button>
     );
   }
