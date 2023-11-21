@@ -3,9 +3,8 @@ import { type NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
   // Parse the incoming request body
-  console.log(0);
   const payload = await request.json();
-  console.log(1);
+  console.log(payload, "<--x");
   const res = await fetch(`https://api.0x.org/tx-relay/v1/swap/submit`, {
     method: "POST",
     headers: {
@@ -13,15 +12,8 @@ export async function POST(request: NextRequest) {
       "0x-chain-id": "137",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      trade: payload.trade,
-      approval: payload.approval,
-    }),
+    body: JSON.stringify(payload),
   });
-  console.log(2);
-
-  console.log(payload.trade, "<-trade");
-  console.log(payload.approval, "<-approval");
 
   const data = await res.json();
   console.log(data, "<--data");

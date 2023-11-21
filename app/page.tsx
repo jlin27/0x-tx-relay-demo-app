@@ -1,21 +1,12 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import PriceView from "./components/price";
 import QuoteView from "./components/quote";
-import { useEffect, useState, useCallback } from "react";
-import { formatUnits, parseUnits } from "ethers";
-import {
-  useAccount,
-  useBalance,
-  useContractRead,
-  erc20ABI,
-  type Address,
-} from "wagmi";
-import { MAX_ALLOWANCE, exchangeProxy } from "../src/constants";
-import MATIC_PERMIT_TOKENS from "../src/supports-permit/137.json";
-import type { TokenSupportsPermit } from "../src/utils/eip712_utils.types";
-import { TxRelayPriceResponse, TxRelayQuoteResponse } from "../src/utils/types";
+import StatusView from "./components/status";
+
+import { useState } from "react";
+import { useAccount } from "wagmi";
+import { TxRelayPriceResponse } from "../src/utils/types";
 
 export default function Page() {
   const { address } = useAccount();
@@ -23,6 +14,7 @@ export default function Page() {
   const [checkAppoval, setCheckApproval] = useState(false);
   const [price, setPrice] = useState<TxRelayPriceResponse | undefined>();
   const [quote, setQuote] = useState();
+  const [tradeHash, setTradeHash] = useState<string | undefined>();
 
   console.log(
     price,
@@ -32,6 +24,10 @@ export default function Page() {
     "<- price, finalize, checkApproval, address"
   );
 
+  if (tradeHash) {
+    return <StatusView tradeHash={tradeHash} />;
+  }
+  console.log(quote, "<-quote");
   return (
     <div>
       {price && finalize ? (
@@ -40,6 +36,7 @@ export default function Page() {
           price={price}
           quote={quote}
           setQuote={setQuote}
+          onSubmitSuccess={setTradeHash}
           takerAddress={address}
         />
       ) : (

@@ -1,21 +1,11 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import QuoteView from "../components/quote";
 import { useEffect, useState } from "react";
 import { formatUnits, parseUnits } from "ethers";
-import {
-  erc20ABI,
-  useAccount,
-  useBalance,
-  useContractRead,
-  type Address,
-} from "wagmi";
+import { erc20ABI, useBalance, useContractRead, type Address } from "wagmi";
 import { MAX_ALLOWANCE, exchangeProxy } from "../../src/constants";
 import MATIC_PERMIT_TOKENS from "../../src/supports-permit/137.json";
 import type { TokenSupportsPermit } from "../../src/utils/eip712_utils.types";
-import {
-  TxRelayPriceResponse,
-  TxRelayQuoteResponse,
-} from "../../src/utils/types";
+
 import qs from "qs";
 
 export default function PriceView({

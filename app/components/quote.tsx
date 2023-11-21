@@ -5,25 +5,22 @@ import {
   TxRelayPriceResponse,
   TxRelayQuoteResponse,
 } from "../../src/utils/types";
-import { secp256k1 } from "@noble/curves/secp256k1";
-import { Hex, hexToNumber } from "viem";
-import {
-  EIP712TypedData,
-  SignatureType,
-  splitSignature,
-} from "../../src/utils/signature";
+import { Hex } from "viem";
+import { SignatureType, splitSignature } from "../../src/utils/signature";
 
 export default function QuoteView({
   checkApproval,
   price,
   quote,
   setQuote,
+  onSubmitSuccess,
   takerAddress,
 }: {
   checkApproval: boolean;
   price: TxRelayPriceResponse;
-  quote: TxRelayQuoteResponse;
+  quote: TxRelayQuoteResponse | undefined;
   setQuote: (price: any) => void;
+  onSubmitSuccess: (tradeHash: string) => void;
   takerAddress: Address | undefined;
 }) {
   // signature for approval (if gasless approval)
@@ -88,7 +85,7 @@ export default function QuoteView({
           }}
         />
       ) : (
-        <div>Getting best quote...</div>
+        <div>Approval Already Signed</div>
       )}
 
       {tradeEip712 ? (
@@ -100,7 +97,7 @@ export default function QuoteView({
           }}
         />
       ) : (
-        <div>Getting best quote...</div>
+        <div>Trade Already Signed</div>
       )}
 
       <SubmitOrderButton
@@ -120,10 +117,9 @@ export default function QuoteView({
     return (
       <button
         onClick={async () => {
-          let approvalSplitSig;
-          let tradeSplitSig;
           let approvalDataToSubmit;
           let tradeDataToSubmit;
+          let succeessfulTradeHash;
 
           // if approval exists, split signature for approval
           if (gaslessApprovalSignature) {
@@ -162,6 +158,7 @@ export default function QuoteView({
           );
 
           try {
+            // POST approval and trade data to submit trade
             const response = await fetch("/api/submit", {
               method: "POST",
               headers: {
@@ -170,10 +167,12 @@ export default function QuoteView({
               body: JSON.stringify({
                 trade: tradeDataToSubmit,
                 approval: approvalDataToSubmit,
-              }), // Send approval and trade data
+              }),
             });
             const data = await response.json();
-            console.log(data, "<- POST data"); // Log the response from your API
+            succeessfulTradeHash = data.tradeHash;
+            onSubmitSuccess(succeessfulTradeHash);
+            console.log(succeessfulTradeHash, "<- tradeHash");
           } catch (error) {
             console.error("Error:", error);
           }
