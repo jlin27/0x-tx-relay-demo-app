@@ -105,42 +105,47 @@ export default function PriceView({
 
       <div className="container mx-auto p-10">
         <header className="text-center py-4">
-          <h1 className="text-2xl font-bold">0x Tx Relay Swap Demo</h1>
+          <h1 className="text-2xl font-bold">Tx Relay Demo</h1>
         </header>
 
-        <div className="max-w-md mx-auto bg-slate-800 shadow-lg rounded-lg p-6">
+        <div className="max-w-md mx-auto bg-gray-800 shadow-lg rounded-lg p-8">
           <form>
-            <div className="mb-4">
-              <label htmlFor="sell" className="block text-gray-200">
+            <div className="mb-6">
+              <label htmlFor="sell" className="block text-gray-300 mb-2">
                 Sell USDC
               </label>
-              <input
-                id="sell-amount"
-                type="number"
-                value={sellAmount}
-                placeholder="Amount"
-                className="w-full p-2 border border-gray-300 rounded mt-1"
-                onChange={(e) => {
-                  setSellAmount(e.target.value);
-                }}
-              />
-              {/* Dropdown or modal for token selection */}
+              <div className="flex justify-between items-center border border-gray-600 rounded overflow-hidden">
+                <input
+                  id="sell-amount"
+                  type="number"
+                  value={sellAmount}
+                  placeholder="Amount"
+                  className="w-full p-3 bg-gray-700 text-white"
+                  onChange={(e) => {
+                    setSellAmount(e.target.value);
+                  }}
+                />
+              </div>
             </div>
+            <hr className="my-6 border-gray-700" />
 
-            <div className="mb-4">
-              <label htmlFor="buy-amount" className="block text-gray-200">
+            <div className="mb-6">
+              <label htmlFor="buy-amount" className="block text-gray-300 mb-2">
                 Buy WMATIC
               </label>
-              <input
-                id="buy-amount"
-                type="number"
-                placeholder="Amount"
-                className="w-full p-2 border border-gray-300 rounded mt-1 cursor-not-allowed"
-                value={buyAmount}
-                readOnly // we want buyAmount to be auto-calculated
-              />
-              {/* Dropdown or modal for token selection */}
+              <div className="flex justify-between items-center border border-gray-600 rounded overflow-hidden">
+                <input
+                  id="buy-amount"
+                  type="number"
+                  placeholder="Amount"
+                  className="w-full p-3 bg-gray-700 text-white cursor-not-allowed"
+                  value={buyAmount}
+                  readOnly
+                />
+                {/* Dropdown for token selection */}
+              </div>
             </div>
+            <hr className="my-6 border-gray-700" />
 
             {takerAddress ? (
               <ApproveOrReviewButton
@@ -179,7 +184,7 @@ export default function PriceView({
                         if (!connected) {
                           return (
                             <button
-                              className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-700"
+                              className="w-full bg-blue-600 text-white font-semibold p-2 rounded hover:bg-blue-700"
                               onClick={openConnectModal}
                               type="button"
                             >
@@ -242,10 +247,10 @@ export default function PriceView({
             )}
           </form>
         </div>
-        <p className="text-md text-center p-4">
+        <p className="text-md text-center p-4 text-gray-500">
           Check out the{" "}
           <u className="underline">
-            <a href="https://0x.org/docs/">0x Docs</a>
+            <a href="https://0x.org/docs/tx-relay-api/introduction">0x Docs</a>
           </u>{" "}
           and{" "}
           <u className="underline">
