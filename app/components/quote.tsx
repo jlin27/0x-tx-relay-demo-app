@@ -27,9 +27,23 @@ export default function QuoteView({
   // signature for approval (if gasless approval)
   const [gaslessApprovalSignature, setGaslessApprovalSignature] =
     useState<Hex>();
+  const [isGaslessApprovalSigned, setIsGaslessApprovalSigned] = useState(false);
+
+  useEffect(() => {
+    // Check if gaslessApprovalSignature has a value and is not null or undefined
+    const signed = !!gaslessApprovalSignature;
+    setIsGaslessApprovalSigned(signed);
+  }, [gaslessApprovalSignature]); // Depend on gaslessApprovalSignature
 
   // signature for trade (always required)
   const [tradeSignature, setTradeSignature] = useState<Hex>();
+  const [isTradeSigned, setIsTradeSigned] = useState(false);
+
+  useEffect(() => {
+    // Check if tradeSignature has a value and is not null or undefined
+    const signed = !!tradeSignature;
+    setIsTradeSigned(signed);
+  }, [tradeSignature]); // Depend on tradeSignature
 
   // Fetch quote data
   useEffect(() => {
@@ -67,18 +81,24 @@ export default function QuoteView({
   const { type: tradeType } = trade; // for trade object, rename the type key to tradeType
 
   return (
-    <div className="p-3 mx-auto max-w-screen-sm">
+    <div className="p-3 mx-auto max-w-screen-md">
       <form>
-        <div className="bg-slate-200 dark:bg-slate-800 p-4 rounded-sm mb-3">
+        <div className="bg-slate-800 p-4 rounded-sm mb-3">
           <div className="text-xl mb-2 text-white">You pay</div>
           <div className="flex items-center text-3xl text-white">
             <span>{formatUnits(quote.sellAmount, 6)}</span>
             <div className="ml-2">USDC</div>
           </div>
         </div>
+
+        <div className="bg-slate-800 p-4 rounded-sm mb-3">
+          <div className="text-xl mb-2 text-white">You receive</div>
+          <div className="flex items-center text-lg sm:text-3xl text-white">
+            <span>{formatUnits(quote.buyAmount, 18)}</span>
+            <div className="ml-2">WMATIC</div>
+          </div>
+        </div>
       </form>
-      <div>{gaslessApprovalSignature}</div>
-      <div>{tradeSignature}</div>
 
       {approvalEip712 ? (
         <SignApproval
@@ -207,19 +227,26 @@ export default function QuoteView({
 
     return (
       <div>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
-          disabled={isLoading}
-          hidden={isSuccess}
-          onClick={async () => {
-            const sig = await signTypedDataAsync();
-            onSign(sig);
-          }}
-        >
-          Sign Gasless Approval
-        </button>
-        {isSuccess && <div>Signature: {data}</div>}
-        {isError && <div>Error signing message</div>}
+        {isGaslessApprovalSigned ? (
+          <div
+            className="bg-slate-500 rounded-sm mb-3
+           text-white text-sm py-2 px-4 break-words"
+          >
+            Approval Signature: {gaslessApprovalSignature}
+          </div>
+        ) : (
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-40"
+            disabled={isGaslessApprovalSigned}
+            hidden={isSuccess}
+            onClick={async () => {
+              const sig = await signTypedDataAsync();
+              onSign(sig);
+            }}
+          >
+            Sign Approval
+          </button>
+        )}
       </div>
     );
   }
@@ -242,19 +269,26 @@ export default function QuoteView({
       });
     return (
       <div>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 mt-2 rounded w-full"
-          disabled={isLoading}
-          hidden={isSuccess}
-          onClick={async () => {
-            const sig = await signTypedDataAsync();
-            onSign(sig);
-          }}
-        >
-          Sign Trade
-        </button>
-        {isSuccess && <div>Signature: {data}</div>}
-        {isError && <div>Error signing message</div>}
+        {isTradeSigned ? (
+          <div
+            className="bg-slate-500 rounded-sm mb-3
+           text-white text-sm py-2 px-4 break-words"
+          >
+            Trade Signature: {tradeSignature}
+          </div>
+        ) : (
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 mt-2 rounded w-full"
+            disabled={isTradeSigned}
+            hidden={isSuccess}
+            onClick={async () => {
+              const sig = await signTypedDataAsync();
+              onSign(sig);
+            }}
+          >
+            Sign Trade
+          </button>
+        )}
       </div>
     );
   }

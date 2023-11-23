@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import qs from "qs";
 
 type StatusResponse = {
   transactions: { hash: string; timestamp: number }[];
@@ -39,14 +38,16 @@ export default function StatusView({ tradeHash }: { tradeHash: string }) {
   }, [tradeHash]);
 
   return (
-    <div>
-      <h1>Checking Trade Status</h1>
+    <div className="container mx-auto p-20 text-center">
+      <h1 className="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl">
+        Trade Status
+      </h1>
 
-      <div>
+      <div className="flex justify-center items-center">
         {statusData?.status === "confirmed" ? (
-          <p>Trade Confirmed!</p>
+          <p className="text-lg">Transaction Completed! 🎉</p>
         ) : (
-          <p>Pending!</p>
+          <p className="text-lg">Transaction Pending ⏳</p>
         )}
       </div>
     </div>
