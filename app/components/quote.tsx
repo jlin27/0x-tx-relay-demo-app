@@ -6,6 +6,7 @@ import {
   TxRelayQuoteResponse,
 } from "../../src/utils/types";
 import { Hex } from "viem";
+import { formatUnits } from "ethers";
 import { SignatureType, splitSignature } from "../../src/utils/signature";
 
 export default function QuoteView({
@@ -44,8 +45,6 @@ export default function QuoteView({
       const response = await fetch(`/api/quote?${qs.stringify(params)}`);
       const data = await response.json();
       setQuote(data);
-      // console.log(data, "<-quote");
-      // console.log(data.approval.eip712, "<-approval.eip712");
     }
     main();
   }, [
@@ -54,7 +53,7 @@ export default function QuoteView({
     price.sellAmount,
     takerAddress,
     checkApproval,
-    setQuote, // is setQuote stable enough to add here?
+    setQuote,
   ]);
 
   if (!quote) {
@@ -68,10 +67,15 @@ export default function QuoteView({
   const { type: tradeType } = trade; // for trade object, rename the type key to tradeType
 
   return (
-    <div className="p-3 mx-auto max-w-screen-sm ">
+    <div className="p-3 mx-auto max-w-screen-sm">
       <form>
-        <h1>We are in quote</h1>
-        <div>{quote.sellAmount}</div>
+        <div className="bg-slate-200 dark:bg-slate-800 p-4 rounded-sm mb-3">
+          <div className="text-xl mb-2 text-white">You pay</div>
+          <div className="flex items-center text-3xl text-white">
+            <span>{formatUnits(quote.sellAmount, 6)}</span>
+            <div className="ml-2">USDC</div>
+          </div>
+        </div>
       </form>
       <div>{gaslessApprovalSignature}</div>
       <div>{tradeSignature}</div>
@@ -116,6 +120,7 @@ export default function QuoteView({
   }) {
     return (
       <button
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold mt-2 py-2 px-4 rounded w-full"
         onClick={async () => {
           let approvalDataToSubmit;
           let tradeDataToSubmit;
@@ -203,6 +208,7 @@ export default function QuoteView({
     return (
       <div>
         <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
           disabled={isLoading}
           hidden={isSuccess}
           onClick={async () => {
@@ -237,6 +243,7 @@ export default function QuoteView({
     return (
       <div>
         <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 mt-2 rounded w-full"
           disabled={isLoading}
           hidden={isSuccess}
           onClick={async () => {
