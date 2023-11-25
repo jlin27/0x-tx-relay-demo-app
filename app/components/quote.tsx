@@ -1,10 +1,15 @@
 import { useSignTypedData, type Address } from "wagmi";
 import { useEffect, useState } from "react";
 import qs from "qs";
+import Image from "next/image";
 import {
   TxRelayPriceResponse,
   TxRelayQuoteResponse,
 } from "../../src/utils/types";
+import {
+  POLYGON_TOKENS_BY_SYMBOL,
+  POLYGON_TOKENS_BY_ADDRESS,
+} from "../../src/constants";
 import { Hex } from "viem";
 import { formatUnits } from "ethers";
 import { SignatureType, splitSignature } from "../../src/utils/signature";
@@ -24,6 +29,11 @@ export default function QuoteView({
   onSubmitSuccess: (tradeHash: string) => void;
   takerAddress: Address | undefined;
 }) {
+  const sellTokenInfo =
+    POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
+  const buyTokenInfo =
+    POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
+
   // signature for approval (if gasless approval)
   const [gaslessApprovalSignature, setGaslessApprovalSignature] =
     useState<Hex>();
@@ -71,7 +81,18 @@ export default function QuoteView({
   ]);
 
   if (!quote) {
-    return <div>Getting best quote...</div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        Getting best quote...
+      </div>
+    );
   }
 
   const { approval, trade } = quote; // grabbing the approval and trade objects
@@ -86,6 +107,13 @@ export default function QuoteView({
         <div className="bg-slate-800 p-4 rounded-sm mb-3">
           <div className="text-xl mb-2 text-white">You pay</div>
           <div className="flex items-center text-3xl text-white">
+            <Image
+              alt={sellTokenInfo.symbol}
+              className="h-9 w-9 mr-2 rounded-md"
+              src={sellTokenInfo.logoURI}
+              width={9}
+              height={9}
+            />
             <span>{formatUnits(quote.sellAmount, 6)}</span>
             <div className="ml-2">USDC</div>
           </div>
@@ -94,6 +122,13 @@ export default function QuoteView({
         <div className="bg-slate-800 p-4 rounded-sm mb-3">
           <div className="text-xl mb-2 text-white">You receive</div>
           <div className="flex items-center text-lg sm:text-3xl text-white">
+            <Image
+              alt={buyTokenInfo.symbol}
+              className="h-9 w-9 mr-2 rounded-md"
+              src={buyTokenInfo.logoURI}
+              width={9}
+              height={9}
+            />
             <span>{formatUnits(quote.buyAmount, 18)}</span>
             <div className="ml-2">WMATIC</div>
           </div>

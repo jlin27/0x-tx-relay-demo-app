@@ -1,8 +1,14 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { erc20ABI, useBalance, useContractRead, type Address } from "wagmi";
-import { exchangeProxy } from "../../src/constants";
+import {
+  POLYGON_TOKENS,
+  POLYGON_TOKENS_BY_SYMBOL,
+  POLYGON_TOKENS_BY_ADDRESS,
+  MAX_ALLOWANCE,
+  exchangeProxy,
+} from "../../src/constants";
 import MATIC_PERMIT_TOKENS from "../../src/supports-permit/137.json";
 import type { TokenSupportsPermit } from "../../src/utils/eip712_utils.types";
 import ZeroExLogo from "../../src/images/white-0x-logo.png";
@@ -22,27 +28,30 @@ export default function PriceView({
 }) {
   const maticPermitTokensDataTyped = MATIC_PERMIT_TOKENS as TokenSupportsPermit;
 
-  const sellToken = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
-
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("");
+  const [sellToken, setSellToken] = useState("usdc");
+  const [buyToken, setBuyToken] = useState("wmatic");
   const [tradeDirection] = useState("sell");
+
+  const sellTokenDecimals = POLYGON_TOKENS_BY_SYMBOL[sellToken].decimals;
+  const buyTokenDecimals = POLYGON_TOKENS_BY_SYMBOL[buyToken].decimals;
 
   const parsedSellAmount =
     sellAmount && tradeDirection === "sell"
-      ? parseUnits(sellAmount, 6).toString()
+      ? parseUnits(sellAmount, sellTokenDecimals).toString()
       : undefined;
 
   const parsedBuyAmount =
     buyAmount && tradeDirection === "buy"
-      ? parseUnits(buyAmount, 18).toString()
+      ? parseUnits(buyAmount, buyTokenDecimals).toString()
       : undefined;
 
   // Fetch price data and set the buyAmount whenever the sellAmount changes
   useEffect(() => {
     const params = {
-      sellToken: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", // USDC
-      buyToken: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270", // WMATIC
+      sellToken: POLYGON_TOKENS_BY_SYMBOL[sellToken].address,
+      buyToken: POLYGON_TOKENS_BY_SYMBOL[buyToken].address,
       sellAmount: parsedSellAmount,
       buyAmount: parsedBuyAmount,
       takerAddress,
@@ -59,7 +68,15 @@ export default function PriceView({
     if (sellAmount !== "") {
       main();
     }
-  }, [sellAmount, parsedBuyAmount, parsedSellAmount, takerAddress, setPrice]);
+  }, [
+    sellAmount,
+    sellToken,
+    buyToken,
+    parsedBuyAmount,
+    parsedSellAmount,
+    takerAddress,
+    setPrice,
+  ]);
 
   // Hook for fetching balance information for specified token for a specific takerAddress
   const { data, isError, isLoading } = useBalance({
@@ -73,7 +90,7 @@ export default function PriceView({
   const isSellTokenPermit = Boolean(maticPermitTokensDataTyped[sellToken]);
 
   const { data: allowance, refetch } = useContractRead({
-    address: sellToken,
+    address: POLYGON_TOKENS_BY_SYMBOL[sellToken].address,
     abi: erc20ABI,
     functionName: "allowance",
     args: takerAddress ? [takerAddress, exchangeProxy] : undefined,
@@ -111,9 +128,19 @@ export default function PriceView({
         <div className="max-w-md mx-auto bg-gray-800 shadow-lg rounded-lg p-8">
           <form>
             <div className="mb-6">
-              <label htmlFor="sell" className="block text-gray-300 mb-2">
-                Sell USDC
-              </label>
+              <div className="flex items-center">
+                <label htmlFor="sell" className="text-gray-300 mb-2 mr-2">
+                  Sell USDC
+                </label>
+                <Image
+                  alt={sellToken}
+                  className="h-6 w-6 mr-2 mb-2 rounded-md"
+                  src={POLYGON_TOKENS_BY_SYMBOL[sellToken].logoURI}
+                  width={6}
+                  height={6}
+                />
+              </div>
+
               <div className="flex justify-between items-center border border-gray-600 rounded overflow-hidden">
                 <input
                   id="sell-amount"
@@ -130,9 +157,21 @@ export default function PriceView({
             <hr className="my-6 border-gray-700" />
 
             <div className="mb-6">
-              <label htmlFor="buy-amount" className="block text-gray-300 mb-2">
-                Buy WMATIC
-              </label>
+              <div className="flex items-center">
+                <label
+                  htmlFor="buy-amount"
+                  className="block text-gray-300 mb-2 mr-2"
+                >
+                  Buy WMATIC
+                </label>
+                <Image
+                  alt={buyToken}
+                  className="h-6 w-6 mr-2 mb-2 rounded-md"
+                  src={POLYGON_TOKENS_BY_SYMBOL[buyToken].logoURI}
+                  width={6}
+                  height={6}
+                />
+              </div>
               <div className="flex justify-between items-center border border-gray-600 rounded overflow-hidden">
                 <input
                   id="buy-amount"
@@ -142,14 +181,13 @@ export default function PriceView({
                   value={buyAmount}
                   readOnly
                 />
-                {/* Dropdown for token selection */}
               </div>
             </div>
             <hr className="my-6 border-gray-700" />
 
             {takerAddress ? (
               <ApproveOrReviewButton
-                sellTokenAddress={sellToken}
+                sellTokenAddress={POLYGON_TOKENS_BY_SYMBOL[sellToken].address}
                 takerAddress={takerAddress}
                 onClick={() => {
                   setFinalize(true);
@@ -220,10 +258,12 @@ export default function PriceView({
                                   }}
                                 >
                                   {chain.iconUrl && (
-                                    <img
-                                      alt={chain.name ?? "Chain icon"}
+                                    <Image
                                       src={chain.iconUrl}
-                                      style={{ width: 12, height: 12 }}
+                                      alt={chain.name ?? "Chain icon"}
+                                      width={12}
+                                      height={12}
+                                      layout="fixed"
                                     />
                                   )}
                                 </div>
@@ -273,13 +313,6 @@ export default function PriceView({
     sellTokenAddress: Address;
     disabled?: boolean;
   }) {
-    const { data: allowance, refetch } = useContractRead({
-      address: sellTokenAddress,
-      abi: erc20ABI,
-      functionName: "allowance",
-      args: [takerAddress, exchangeProxy],
-    });
-
     return (
       <button
         type="button"
